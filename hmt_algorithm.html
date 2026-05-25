@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface2: #f0f1f4;
+    --border: #d8dae3;
+    --text: #1a1d2e;
+    --muted: #5a6080;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --teal: #047857;   --teal-light: #d1fae5;
+    --blue: #1d4ed8;   --blue-light: #dbeafe;
+    --coral: #c2410c;  --coral-light: #ffedd5;
+    --amber: #92400e;  --amber-light: #fef3c7;
+    --green: #065f46;  --green-light: #dcfce7;
+  }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+  h1 { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+  .subtitle { font-size: 0.8rem; color: var(--muted); margin-bottom: 18px; }
+
+  #breadcrumb { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; min-height: 22px; }
+  .crumb { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; }
+  .crumb-sep { color: var(--border); align-self: center; }
+
+  #progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 18px; }
+  #progress-fill { height: 100%; background: linear-gradient(90deg, #047857, #1d4ed8); border-radius: 2px; transition: width 0.3s; width: 0%; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.67rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+  .lbl-gray   { color: var(--muted);   background: var(--surface2); border: 1px solid var(--border); }
+  .lbl-purple { color: var(--purple);  background: var(--purple-light); }
+  .lbl-teal   { color: var(--teal);    background: var(--teal-light); }
+  .lbl-blue   { color: var(--blue);    background: var(--blue-light); }
+  .lbl-coral  { color: var(--coral);   background: var(--coral-light); }
+  .lbl-amber  { color: var(--amber);   background: var(--amber-light); }
+  .lbl-green  { color: var(--green);   background: var(--green-light); }
+
+  .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .card .body-text { font-size: 0.84rem; color: var(--muted); line-height: 1.75; white-space: pre-line; }
+
+  .info-box { border-radius: 8px; padding: 11px 15px; margin-top: 14px; font-size: 0.82rem; line-height: 1.6; border-left: 3px solid; }
+  .info-purple { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+  .info-teal   { background: var(--teal-light);   border-color: var(--teal);   color: var(--teal); }
+  .info-blue   { background: var(--blue-light);   border-color: var(--blue);   color: var(--blue); }
+  .info-coral  { background: var(--coral-light);  border-color: var(--coral);  color: var(--coral); }
+  .info-amber  { background: var(--amber-light);  border-color: var(--amber);  color: var(--amber); }
+  .info-green  { background: var(--green-light);  border-color: var(--green);  color: var(--green); }
+
+  .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .choice-btn {
+    background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; color: var(--text); font-size: 0.87rem; cursor: pointer;
+    text-align: left; display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; transition: all 0.15s; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .choice-btn:hover { border-color: #1d4ed8; background: #dbeafe; }
+  .choice-btn .arr { color: var(--border); flex-shrink: 0; }
+  .choice-btn:hover .arr { color: #1d4ed8; }
+
+  .controls { display: flex; gap: 8px; margin-top: 12px; }
+  .ctrl-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; transition: all 0.15s; }
+  .ctrl-btn:hover { border-color: #c2410c; color: #c2410c; }
+
+  .end-card { background: var(--surface); border: 2px solid var(--teal); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(4,120,87,0.1); }
+  .end-card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+  .end-card .body-text { margin-bottom: 18px; }
+  .path-label { font-size: 0.7rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+  .path-list { list-style: none; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .path-list li { display: flex; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 0.84rem; color: var(--muted); }
+  .path-list li:last-child { border-bottom: none; }
+  .path-list li:nth-child(even) { background: var(--surface2); }
+  .step-num { font-family: 'IBM Plex Mono', monospace; font-size: 0.67rem; color: var(--teal); background: var(--teal-light); border-radius: 4px; padding: 2px 6px; white-space: nowrap; align-self: flex-start; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Heat &amp; Mass Transfer</h1>
+<p class="subtitle">Solution algorithm — follow each step to identify your transfer mode</p>
+<div id="breadcrumb"></div>
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="app"></div>
+
+<script>
+(function() {
+
+var STEPS = {
+  start: {
+    label:"Begin", lbl:"lbl-gray",
+    title:"Read the problem carefully",
+    body:"Before doing anything else, identify what information you have been given and what you need to find.\n\nLook for key words — temperatures, flow rates, materials, concentrations, surface properties.",
+    choices:[
+      {text:"Ready — identify the transfer mode", next:"q_conc"}
+    ]
+  },
+  q_conc: {
+    label:"Step 1", lbl:"lbl-gray",
+    title:"What driving forces are present?",
+    body:"Check whether the problem involves a temperature difference, a concentration difference, or both.\n\nConcentration indicators: species diffusing, mole fractions, partial pressures.\nTemperature indicators: surface temperature, fluid temperature, heat flux.",
+    choices:[
+      {text:"Temperature difference only", next:"q_solid", crumb:"Temperature only"},
+      {text:"Concentration gradient only", next:"mt_steady", crumb:"Concentration only"},
+      {text:"Both temperature and concentration are present", next:"combined_intro", crumb:"Both — combined transfer"}
+    ]
+  },
+
+  mt_steady: {
+    label:"Mass Transfer", lbl:"lbl-purple",
+    title:"Is it steady state?",
+    body:"Steady state means the concentration profile is not changing with time.",
+    info:{text:"The driving force here is a concentration difference, not a temperature difference.", cls:"info-purple"},
+    choices:[
+      {text:"Yes — concentration not changing with time", next:"mt_f1", crumb:"Steady state"},
+      {text:"No — transient concentration profile", next:"mt_f2", crumb:"Transient"}
+    ]
+  },
+  mt_f1: {
+    label:"Mass Transfer — Steady", lbl:"lbl-purple",
+    title:"Use Fick's first law",
+    body:"Fick's first law relates the diffusion flux to the concentration gradient.\n\nYou need: diffusivity, cross-sectional area, and concentration difference across the path length.",
+    choices:[
+      {text:"Is fluid also flowing past the surface?", next:"mt_conv", crumb:"Fick's 1st law"}
+    ]
+  },
+  mt_f2: {
+    label:"Mass Transfer — Transient", lbl:"lbl-purple",
+    title:"Use Fick's second law",
+    body:"Fick's second law describes how concentration changes with both position and time.\n\nUse this when tracking how a concentration profile develops over time.",
+    choices:[
+      {text:"Is fluid also flowing past the surface?", next:"mt_conv", crumb:"Fick's 2nd law"}
+    ]
+  },
+  mt_conv: {
+    label:"Mass Transfer", lbl:"lbl-purple",
+    title:"Is fluid flowing past the surface?",
+    body:"If there is a bulk fluid flow (e.g. gas flowing over an evaporating surface), diffusion alone does not fully describe the transfer rate.",
+    choices:[
+      {text:"Yes — use the Sherwood number (Sh), analogous to Nu", next:"end_mt", crumb:"Convective — Sh number"},
+      {text:"No — pure diffusion, Fick's law is sufficient", next:"end_mt", crumb:"Pure diffusion"}
+    ]
+  },
+  end_mt: {
+    label:"Complete", lbl:"lbl-purple",
+    title:"Solve and report your answer",
+    body:"Make sure your answer includes correct units.\n\nCheck whether you are reporting flux (mol/m2 s) or a total transfer rate (mol/s).",
+    end:true
+  },
+
+  combined_intro: {
+    label:"Combined Transfer", lbl:"lbl-green",
+    title:"Simultaneous heat and mass transfer",
+    body:"Both modes need to be solved. Common examples:\n  - Evaporation: liquid evaporates, cooling the surface\n  - Drying operations\n  - Condensation\n  - Absorption with heat of reaction\n\nWork through mass transfer first, then heat transfer, then combine.",
+    info:{text:"Check whether the problem asks you to treat the two modes independently or account for coupling (e.g. mass flux carrying energy as latent heat).", cls:"info-green"},
+    choices:[
+      {text:"Understood — start with mass transfer", next:"cmt_steady", crumb:"Combined: starting mass transfer"}
+    ]
+  },
+  cmt_steady: {
+    label:"Combined — Mass Transfer", lbl:"lbl-green",
+    title:"Is the mass transfer steady state?",
+    body:"Steady state means the concentration profile is not changing with time.",
+    info:{text:"PART 1 OF 2 — Mass transfer. You will move to heat transfer after this.", cls:"info-green"},
+    choices:[
+      {text:"Yes — steady state", next:"cmt_f1", crumb:"Mass transfer: steady"},
+      {text:"No — transient", next:"cmt_f2", crumb:"Mass transfer: transient"}
+    ]
+  },
+  cmt_f1: {
+    label:"Combined — Mass Transfer", lbl:"lbl-green",
+    title:"Steady mass transfer — Fick's first law",
+    body:"Use Fick's first law for the diffusion flux.\n\nIf fluid is also flowing, apply the Sherwood number (Sh analogous to Nu).",
+    choices:[
+      {text:"Mass transfer identified — move to heat transfer", next:"cht_solid", crumb:"Mass transfer: Fick's 1st"}
+    ]
+  },
+  cmt_f2: {
+    label:"Combined — Mass Transfer", lbl:"lbl-green",
+    title:"Transient mass transfer — Fick's second law",
+    body:"Use Fick's second law for the time-varying concentration profile.\n\nIf fluid is also flowing, apply the Sherwood number for convective mass transfer.",
+    choices:[
+      {text:"Mass transfer identified — move to heat transfer", next:"cht_solid", crumb:"Mass transfer: Fick's 2nd"}
+    ]
+  },
+  cht_solid: {
+    label:"Combined — Heat Transfer", lbl:"lbl-green",
+    title:"Is heat moving through a solid?",
+    body:"Look for: a wall, pipe wall, fins, or a solid layer with a temperature difference across it.",
+    info:{text:"PART 2 OF 2 — Heat transfer. Follow the path then combine both results at the end.", cls:"info-green"},
+    choices:[
+      {text:"Yes — conduction through a solid", next:"cht_cond", crumb:"Heat transfer: conduction"},
+      {text:"No — fluid heat transfer", next:"cht_rad", crumb:"Heat transfer: fluid"}
+    ]
+  },
+  cht_cond: {
+    label:"Combined — Conduction", lbl:"lbl-green",
+    title:"Steady or transient conduction?",
+    body:"Steady: apply Fourier's law.\n\nTransient: calculate Biot number Bi = hL/k\n  Bi < 0.1  — lumped system, use T_avg = (Ti + T-inf) / 2\n  Bi >= 0.1 — Heisler charts or one-term series solution",
+    choices:[
+      {text:"Conduction approach identified — combine results", next:"end_combined", crumb:"Heat transfer: conduction"}
+    ]
+  },
+  cht_rad: {
+    label:"Combined — Radiation?", lbl:"lbl-green",
+    title:"Are surrounding temperature or emissivity given?",
+    body:"If T_surr or emissivity (e) are provided, include a radiation term using the Stefan-Boltzmann law.",
+    choices:[
+      {text:"Yes — include radiation", next:"cht_flow", crumb:"Radiation included"},
+      {text:"No — radiation negligible", next:"cht_flow", crumb:"No radiation"}
+    ]
+  },
+  cht_flow: {
+    label:"Combined — Convection", lbl:"lbl-green",
+    title:"Is the fluid moving?",
+    body:"Look for: a pump, fan, stated velocity, or flow rate — forced convection.\n\nNo imposed flow — natural convection.",
+    choices:[
+      {text:"Yes — forced convection", next:"cht_forced", crumb:"Forced convection"},
+      {text:"No — natural convection", next:"cht_natural", crumb:"Natural convection"}
+    ]
+  },
+  cht_forced: {
+    label:"Combined — Forced Convection", lbl:"lbl-green",
+    title:"Forced convection steps",
+    body:"1. Internal or external flow?\n2. Calculate Re — find laminar or turbulent regime\n3. Identify temperature for properties:\n   External: film temperature Tf = (Ts + T-inf) / 2\n   Internal: bulk mean temperature\n4. Select correlation for geometry from tables\n5. Get Nu, then h = Nu * k / L",
+    choices:[
+      {text:"h found — combine results", next:"end_combined", crumb:"Heat transfer: forced convection"}
+    ]
+  },
+  cht_natural: {
+    label:"Combined — Natural Convection", lbl:"lbl-green",
+    title:"Natural convection steps",
+    body:"1. Calculate Ra = Gr * Pr\n2. Evaluate properties at film temperature:\n   Tf = (Ts + T-inf) / 2\n   For gases: beta = 1/Tf (Kelvin)\n3. Select correlation for geometry from tables\n4. Get Nu, then h = Nu * k / L",
+    choices:[
+      {text:"h found — combine results", next:"end_combined", crumb:"Heat transfer: natural convection"}
+    ]
+  },
+  end_combined: {
+    label:"Complete — Combined", lbl:"lbl-green",
+    title:"Combine and solve",
+    body:"You now have both transfer rates:\n\n  Heat:  Q = h A (Ts - T-inf)  plus radiation if applicable\n  Mass:  N = hm A (Cs - C-inf)  or from Fick's law\n\nIf latent heat applies (e.g. evaporation):\n  Q_latent = N * delta_h_vap\n\nReport both Q and N with correct units.",
+    end:true
+  },
+
+  q_solid: {
+    label:"Step 2", lbl:"lbl-teal",
+    title:"Is heat moving through a solid?",
+    body:"Look for: a wall, pipe wall, composite slab, fin, or any solid material with a temperature difference across it.",
+    choices:[
+      {text:"Yes — conduction through a solid", next:"cd_steady", crumb:"Solid — Conduction"},
+      {text:"No — fluid medium", next:"q_rad", crumb:"Fluid medium"}
+    ]
+  },
+  cd_steady: {
+    label:"Conduction", lbl:"lbl-teal",
+    title:"Is it steady state?",
+    body:"Steady state means temperatures at every point are constant — the profile is no longer changing with time.",
+    info:{text:"Heat flows through the solid by molecular vibration — no bulk fluid movement involved.", cls:"info-teal"},
+    choices:[
+      {text:"Yes — steady state", next:"cd_fourier", crumb:"Steady state"},
+      {text:"No — transient", next:"cd_biot", crumb:"Transient"}
+    ]
+  },
+  cd_fourier: {
+    label:"Conduction — Steady", lbl:"lbl-teal",
+    title:"Apply Fourier's law",
+    body:"Heat flux is proportional to the temperature gradient and the thermal conductivity of the material.\n\nFor flat walls, cylinders, and spheres, use the appropriate thermal resistance expression.",
+    choices:[
+      {text:"Continue to solve", next:"end_cd", crumb:"Fourier's law"}
+    ]
+  },
+  cd_biot: {
+    label:"Conduction — Transient", lbl:"lbl-teal",
+    title:"Calculate the Biot number (Bi = hL/k)",
+    body:"Bi tells you whether temperature inside the solid is approximately uniform.\n\nBi < 0.1  — lumped system, temperature nearly uniform\nBi >= 0.1 — Heisler charts or one-term series solution",
+    info:{text:"Lumped system: use average temperature  T_avg = (Ti + T-inf) / 2", cls:"info-amber"},
+    choices:[
+      {text:"Continue to solve", next:"end_cd", crumb:"Biot number checked"}
+    ]
+  },
+  end_cd: {
+    label:"Complete", lbl:"lbl-teal",
+    title:"Solve and report your answer",
+    body:"Units: heat transfer rate in W, heat flux in W/m2.\n\nFor composite systems, sum resistances in series.",
+    end:true
+  },
+  q_rad: {
+    label:"Step 3", lbl:"lbl-coral",
+    title:"Are surrounding temperature or emissivity given?",
+    body:"If the problem provides T_surr or surface emissivity (e), radiation is present and should be included.",
+    choices:[
+      {text:"Yes — T_surr and/or emissivity given", next:"rad_info", crumb:"Radiation present"},
+      {text:"No — radiation can be neglected", next:"q_flow", crumb:"No radiation"}
+    ]
+  },
+  rad_info: {
+    label:"Radiation", lbl:"lbl-coral",
+    title:"Include the radiation term",
+    body:"Use the Stefan-Boltzmann law. Temperatures must be in Kelvin.\n\nIf view factors are relevant (enclosures, multiple surfaces), account for them.",
+    info:{text:"Radiation is often combined with natural convection — add both heat fluxes at the end.", cls:"info-coral"},
+    choices:[
+      {text:"Continue — determine the convection mode", next:"q_flow", crumb:"Radiation: Stefan-Boltzmann"}
+    ]
+  },
+  q_flow: {
+    label:"Step 4", lbl:"lbl-blue",
+    title:"Is the fluid moving?",
+    body:"Look for: a pump, fan, blower, stated flow velocity, volumetric or mass flow rate, or wind speed.",
+    choices:[
+      {text:"Yes — external source driving the flow", next:"fc_geom", crumb:"Forced convection"},
+      {text:"No — fluid is stationary", next:"nc_ra", crumb:"Natural convection"}
+    ]
+  },
+  fc_geom: {
+    label:"Forced Convection", lbl:"lbl-blue",
+    title:"Internal or external flow?",
+    body:"Internal: fluid enclosed in a pipe, duct, or channel.\nExternal: fluid flows over the outside of a surface.",
+    choices:[
+      {text:"Internal — inside a pipe or duct", next:"fc_re", crumb:"Internal flow"},
+      {text:"External — over a surface", next:"fc_re", crumb:"External flow"}
+    ]
+  },
+  fc_re: {
+    label:"Forced Convection", lbl:"lbl-blue",
+    title:"Calculate the Reynolds number (Re)",
+    body:"Re determines whether the flow is laminar or turbulent.\n\nInternal:  Re < 2300 laminar,  Re > 10000 turbulent\nExternal (flat plate):  Re < 5x10^5 laminar",
+    choices:[
+      {text:"I have Re — check temperature for fluid properties", next:"fc_temp", crumb:"Re calculated"}
+    ]
+  },
+  fc_temp: {
+    label:"Key Step — Temperature", lbl:"lbl-amber",
+    title:"Which temperature for fluid properties?",
+    body:"Always check your correlation before looking up properties.\n\nFilm temperature (most external flow correlations):\n  Tf = (Ts + T-inf) / 2\n\nBulk mean temperature (most internal flow correlations):\n  Use the mean fluid temperature along the duct.\n\nEvaluate k, mu, rho, Pr at the correct temperature.",
+    choices:[
+      {text:"Properties evaluated — select the correlation", next:"fc_corr", crumb:"Temperature identified"}
+    ]
+  },
+  fc_corr: {
+    label:"Forced Convection", lbl:"lbl-blue",
+    title:"Select the right correlation from your tables",
+    body:"Match to:\n  - Geometry (flat plate, cylinder, sphere, pipe)\n  - Flow regime (laminar or turbulent)\n  - Fluid type — check the valid Pr range\n\nCorrelation gives Nu. Then:\n  h = Nu * k / L",
+    choices:[
+      {text:"I have h — calculate Q", next:"end_fc", crumb:"Correlation selected — h found"}
+    ]
+  },
+  end_fc: {
+    label:"Complete", lbl:"lbl-blue",
+    title:"Calculate Q = h A (Ts - T-inf)",
+    body:"If radiation was identified earlier, add the radiation and convection heat fluxes together.\n\nReport your final answer with correct units.",
+    end:true
+  },
+  nc_ra: {
+    label:"Natural Convection", lbl:"lbl-blue",
+    title:"Calculate the Rayleigh number (Ra = Gr x Pr)",
+    body:"Grashof number (Gr) gives the ratio of buoyancy to viscous forces. Ra = Gr x Pr identifies the flow regime.",
+    info:{text:"Natural convection is driven by density differences from temperature gradients — no pump or fan.", cls:"info-blue"},
+    choices:[
+      {text:"I have Ra — evaluate fluid properties", next:"nc_temp", crumb:"Ra calculated"}
+    ]
+  },
+  nc_temp: {
+    label:"Key Step — Temperature", lbl:"lbl-amber",
+    title:"Use film temperature for all fluid properties",
+    body:"Always evaluate properties at the film temperature:\n\n  Tf = (Ts + T-inf) / 2\n\nFor gases, thermal expansion coefficient:\n  beta = 1 / Tf   (Tf in Kelvin)",
+    choices:[
+      {text:"Properties evaluated — select correlation", next:"nc_corr", crumb:"Film temperature used"}
+    ]
+  },
+  nc_corr: {
+    label:"Natural Convection", lbl:"lbl-blue",
+    title:"Select a correlation for your geometry",
+    body:"Common geometries:\n  - Vertical plate: Churchill-Chu\n  - Horizontal cylinder: Churchill-Chu or McAdams\n  - Horizontal plate: separate correlations, heated face up vs. down\n\nCorrelation gives Nu. Then:\n  h = Nu * k / L",
+    choices:[
+      {text:"I have h — calculate Q", next:"end_nc", crumb:"Correlation selected — h found"}
+    ]
+  },
+  end_nc: {
+    label:"Complete", lbl:"lbl-blue",
+    title:"Calculate Q = h A (Ts - T-inf)",
+    body:"If radiation was identified, add both heat fluxes to get the total.\n\nNatural convection and radiation are often similar in magnitude — do not neglect radiation without checking.\n\nReport your final answer with correct units.",
+    end:true
+  }
+};
+
+var history = [];
+var current = "start";
+var breadcrumbs = [];
+
+function render() {
+  var step = STEPS[current];
+  if (!step) { document.getElementById("app").textContent = "Error: unknown step: " + current; return; }
+
+  document.getElementById("progress-fill").style.width =
+    (step.end ? 100 : Math.min(88, breadcrumbs.length * 11)) + "%";
+
+  var bc = document.getElementById("breadcrumb");
+  bc.innerHTML = "";
+  for (var i = 0; i < breadcrumbs.length; i++) {
+    var sp = document.createElement("span");
+    sp.className = "crumb";
+    sp.textContent = breadcrumbs[i];
+    bc.appendChild(sp);
+    if (i < breadcrumbs.length - 1) {
+      var sep = document.createElement("span");
+      sep.className = "crumb-sep";
+      sep.textContent = " > ";
+      bc.appendChild(sep);
+    }
+  }
+
+  var app = document.getElementById("app");
+  app.innerHTML = "";
+
+  if (step.end) { renderEnd(step, app); return; }
+
+  var card = document.createElement("div");
+  card.className = "card";
+
+  var lbl = document.createElement("div");
+  lbl.className = "card-label " + step.lbl;
+  lbl.textContent = step.label;
+  card.appendChild(lbl);
+
+  var h2 = document.createElement("h2");
+  h2.textContent = step.title;
+  card.appendChild(h2);
+
+  var body = document.createElement("p");
+  body.className = "body-text";
+  body.textContent = step.body;
+  card.appendChild(body);
+
+  if (step.info) {
+    var ib = document.createElement("div");
+    ib.className = "info-box " + step.info.cls;
+    ib.textContent = step.info.text;
+    card.appendChild(ib);
+  }
+
+  var ch = document.createElement("div");
+  ch.className = "choices";
+
+  for (var j = 0; j < step.choices.length; j++) {
+    (function(c) {
+      var btn = document.createElement("button");
+      btn.className = "choice-btn";
+      var txt = document.createElement("span");
+      txt.textContent = c.text;
+      var arr = document.createElement("span");
+      arr.className = "arr";
+      arr.textContent = "→";
+      btn.appendChild(txt);
+      btn.appendChild(arr);
+      btn.addEventListener("click", function() {
+        history.push(current);
+        if (c.crumb) breadcrumbs.push(c.crumb);
+        current = c.next;
+        render();
+      });
+      ch.appendChild(btn);
+    })(step.choices[j]);
+  }
+
+  card.appendChild(ch);
+  app.appendChild(card);
+
+  var ctrl = document.createElement("div");
+  ctrl.className = "controls";
+
+  if (history.length > 0) {
+    var back = document.createElement("button");
+    back.className = "ctrl-btn";
+    back.textContent = "Back";
+    back.addEventListener("click", function() {
+      if (history.length === 0) return;
+      current = history.pop();
+      if (breadcrumbs.length > 0) breadcrumbs.pop();
+      render();
+    });
+    ctrl.appendChild(back);
+  }
+
+  if (current !== "start") {
+    var rst = document.createElement("button");
+    rst.className = "ctrl-btn";
+    rst.textContent = "Start over";
+    rst.addEventListener("click", function() {
+      history = []; current = "start"; breadcrumbs = []; render();
+    });
+    ctrl.appendChild(rst);
+  }
+
+  app.appendChild(ctrl);
+}
+
+function renderEnd(step, app) {
+  var card = document.createElement("div");
+  card.className = "end-card";
+
+  var lbl = document.createElement("div");
+  lbl.className = "card-label " + step.lbl;
+  lbl.textContent = step.label;
+  card.appendChild(lbl);
+
+  var h2 = document.createElement("h2");
+  h2.textContent = step.title;
+  card.appendChild(h2);
+
+  var body = document.createElement("p");
+  body.className = "body-text";
+  body.textContent = step.body;
+  card.appendChild(body);
+
+  var pl = document.createElement("div");
+  pl.className = "path-label";
+  pl.textContent = "Your path through the algorithm";
+  card.appendChild(pl);
+
+  var ul = document.createElement("ul");
+  ul.className = "path-list";
+  for (var i = 0; i < breadcrumbs.length; i++) {
+    var li = document.createElement("li");
+    var num = document.createElement("span");
+    num.className = "step-num";
+    num.textContent = "Step " + (i + 1);
+    var t = document.createElement("span");
+    t.textContent = breadcrumbs[i];
+    li.appendChild(num);
+    li.appendChild(t);
+    ul.appendChild(li);
+  }
+  card.appendChild(ul);
+
+  var ctrl = document.createElement("div");
+  ctrl.className = "controls";
+  var rst = document.createElement("button");
+  rst.className = "ctrl-btn";
+  rst.textContent = "Start over";
+  rst.addEventListener("click", function() {
+    history = []; current = "start"; breadcrumbs = []; render();
+  });
+  ctrl.appendChild(rst);
+  card.appendChild(ctrl);
+
+  app.appendChild(card);
+}
+
+render();
+
+})();
+</script>
+</body>
+</html>
